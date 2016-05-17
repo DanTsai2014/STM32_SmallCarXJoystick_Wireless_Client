@@ -6,8 +6,6 @@
 #include "stm32f4xx_dma.h"
 #include "EPW_behavior.h"
 #include "uart.h"
-#include "PWM.h"
-#include "MPU6050.h"
 
 void vApplicationTickHook(void) {
 }
@@ -51,8 +49,7 @@ void vApplicationStackOverflowHook(xTaskHandle pxTask, signed char *pcTaskName) 
 void Usart3_Printf(char *string){
     while(*string){
         // send string to USART3 
-        USART_SendData(USART3, (unsigned short int) *string++);//unsigned short int
-
+        USART_SendData(USART3, (unsigned short int) *string++);
         // wait for sending string finished 
         while (USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET);
     }
@@ -67,83 +64,58 @@ u16 readADC1(u8 channel) { //u16 = unsigned char
 
 
 int main(void) {
+  uint8_t ret = pdFALSE;
+  int Working_Time = 50000;
+  int Work_Count = 0;
 
-		uint8_t ret = pdFALSE;
-    int i;
-    int Working_Time = 50000;
-    int Work_Count = 0;
-
-    float ADCMaxVal = 4095;
-    float mVMaxVal = 5000;
-    float supplyMidPointmV = 2950/2;
-    float mVperg = 295;
-    float mVPerADC = mVMaxVal / ADCMaxVal;
+  float ADCMaxVal = 4095;
+  float mVMaxVal = 5000;
+  float supplyMidPointmV = 2950/2;
+  float mVperg = 295;
+  float mVPerADC = mVMaxVal / ADCMaxVal;
     
-    /*init.*/
-		//NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
-		init_USART3(9600);
-    init_USART2(9600);
+	init_USART3(9600);
+  init_USART2(9600);
+  init_ADC1();
+  ADC_SoftwareStartConv(ADC1);
+       
+  MPU6050_I2C_Init();
+  MPU6050_Initialize_1();
+  MPU6050_Initialize_2();
     
-    //USART_puts(USART3, "I love to eat");
-    //USART_puts(USART2, "apple!!");
-    //delay(100);
+  //PLX-DAQ
+  USART_puts(USART3, "CLEARDATA"); //clears up any data left from previous projects
+  USART_puts(USART3, "\r\n");
+  USART_puts(USART3, "LABEL,Time,JOY_x,JOY_y,JOY_xx,JOY_yy,ACC1_x,ACC1_y,ACC1_z,ANG1_x,ANG1_y,ANG1_z,ACC2_x,ACC2_y,ACC2_z,ANG2_x,ANG2_y,ANG2_z"); //always write LABEL, so excel knows the next things will be the names of the columns (instead of Acolumn you could write Time for instance)
+  USART_puts(USART3, "\r\n");
+  USART_puts(USART3, "RESETTIMER"); //resets timer to 0
+  USART_puts(USART3, "\r\n");
 
-        //init_linear_actuator();
-        init_ADC1();
-        ADC_SoftwareStartConv(ADC1);
-        //init_Timer();
-        //init_Wheels();
-        //init_PWM();
-        
-    //delay(100);
-        
-    //MPU6050_I2C_Init();
-    //MPU6050_Initialize_1();
-    //MPU6050_Initialize_2();
-    //USART_puts(USART3, "I love to eat");
-    //USART_puts(USART2, "apple!!");
-    
-
-    //PLX-DAQ
-    USART_puts(USART3, "CLEARDATA"); //clears up any data left from previous projects
-    USART_puts(USART3, "\r\n");
-    USART_puts(USART3, "LABEL,Time,JOY_x,JOY_y,JOY_xx,JOY_yy,ACC1_x,ACC1_y,ACC1_z,ANG1_x,ANG1_y,ANG1_z,ACC2_x,ACC2_y,ACC2_z,ANG2_x,ANG2_y,ANG2_z"); //always write LABEL, so excel knows the next things will be the names of the columns (instead of Acolumn you could write Time for instance)
-    USART_puts(USART3, "\r\n");
-    USART_puts(USART3, "RESETTIMER"); //resets timer to 0
-    USART_puts(USART3, "\r\n");
-
-    
-
-        /*
-        if( MPU6050_TestConnection() == TRUE)
+  /*
+  if( MPU6050_TestConnection() == TRUE)
   {
      USART_puts(USART3, "connection success\r\n");
   }else {
      USART_puts(USART3, "connection failed\r\n");
   }*/
 
-		/*create the task. */         
-        //printf("Task creating...........\r\n");
-		//ret = xTaskCreate(neural_task, "neural PID update task", 8192 /*configMINIMAL_STACK_SIZE*/, NULL, 2, NULL);
-        //ret &= xTaskCreate(receive_task, "receive command task", 1024 /*configMINIMAL_STACK_SIZE*/, NULL, 3, NULL);
-        //ret &= xTaskCreate(send_data_task, "send data task", 1024 /*configMINIMAL_STACK_SIZE*/, NULL, 1, NULL);
-        ret = xTaskCreate(parse_Joystick_dir, ( signed portCHAR * ) "parse Joystick direction", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
-        //ret = xTaskCreate(send_Joystick_data, (signed portCHAR *) "send Joystick data", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
-        ret = xTaskCreate(send_MPU6050_data, (signed portCHAR *) "send MPU6050 data", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-        //ret &= xTaskCreate(send_Tremor_Warning, (signed portCHAR *) "send_Tremor_Warning", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-		//ret &= xTaskCreate(send_out_task, "send out information task", 1024 /*configMINIMAL_STACK_SIZE*/, NULL, 1, NULL);
-		//if (ret == pdTRUE) {
-				//printf("All tasks are created.\r\n");
-                //printf("System Started!\r\n");
-				vTaskStartScheduler();  // should never return
-		//} else {
-				//printf("System Error!\r\n");
-				// --TODO blink some LEDs to indicates fatal system error
-		//}
+	/*create the task. */         
+  //printf("Task creating...........\r\n");
+  ret = xTaskCreate(parse_Joystick_dir, (signed portCHAR *) "parse Joystick direction", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
+  ret = xTaskCreate(send_Joystick_MPU6050_data, (signed portCHAR *) "send Joystick and MPU6050 data", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 
-		for (;;);
+	//if (ret == pdTRUE) {
+	//printf("All tasks are created.\r\n");
+  //printf("System Started!\r\n");
+	vTaskStartScheduler();  // should never return
+	//} else {
+	//printf("System Error!\r\n");
+	// --TODO blink some LEDs to indicates fatal system error
+	//}
 
-        //return 0;
+	for (;;);
+
+  //return 0;
 }
 
 

@@ -75,9 +75,8 @@ SRC+=example.c
 #SmartEPW_lib
 SRC+=EPW_behavior.c
 SRC+=uart.c
-SRC+=PWM.c
-SRC+=MPU6050.c
 SRC+=delay.c
+SRC+=MPU6050.c
 
 
 # FreeRTOS Source Files

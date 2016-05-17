@@ -20,17 +20,9 @@
 int16_t ADC1ConvertedVoltage[2]; //or array? /*Joystick's ADC*/
 int16_t Joystick_x_Filter;
 int16_t Joystick_y_Filter;
-int16_t Data_Head[5];
-int16_t tremor_count;
-int16_t Joy_dir;
-
 
 /*===============end of define  the all by pins========================*/
 
 extern void parse_Joystick_dir();
-extern void send_Joystick_data();
-extern void send_Tremor_Warning();
-extern void detect_x_Tremor();
-extern void detect_y_Tremor();
-extern void send_MPU6050_data();
+extern void send_Joystick_MPU6050_data();
 #endif /* __CAR_BEHAVIOR_H__ */

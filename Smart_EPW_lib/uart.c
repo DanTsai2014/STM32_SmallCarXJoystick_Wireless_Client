@@ -20,8 +20,6 @@
 #define USART2_RX_PIN                     GPIO_Pin_3
 
 uint8_t Receive_String_Ready=0;
-uint8_t Receive_String_Ready_2=0;
-
 
 volatile xSemaphoreHandle serial_tx_wait_sem = NULL;
 volatile xQueueHandle serial_rx_queue = NULL ; 
@@ -40,7 +38,6 @@ typedef struct {
 
 
 void init_USART3(uint32_t baurate){
-
 	/* This is a concept that has to do with the libraries provided by ST
 	 * to make development easier the have made up something similar to 
 	 * classes, called TypeDefs, which actually just define the common
@@ -185,17 +182,12 @@ void init_USART2(uint32_t baurate){
 	USART_Cmd(USART2, ENABLE);
 }
 
-
-
 // this is the interrupt request handler (IRQ) for ALL USART3 interrupts
 void USART3_IRQHandler(void){
-
 	// check if the USART3 receive interrupt flag was set
 	if( USART_GetITStatus(USART3, USART_IT_RXNE) ){
-
 		/*check the uart RX have accept the char*/
 		GPIO_ToggleBits(GPIOD,GPIO_Pin_14);
-
 
 		static uint8_t cnt = 0; // this counter is used to determine the uart receive string length
 
@@ -209,14 +201,13 @@ void USART3_IRQHandler(void){
 		if( cnt < MAX_STRLEN){ 
 			received_string[cnt] = Receive_data;
             if(Receive_data=='0') GPIO_ToggleBits(GPIOD,GPIO_Pin_15);
-
             //start determine the period of command.
             if(received_string[cnt]=='\r'){
                 Receive_String_Ready = 1; //Ready to parse the command
-            cnt=0; //restart to accept next stream message.
+                cnt=0; //restart to accept next stream message.
             }
             else{
-                cnt++;
+            	cnt++;
             }
 		}
 		else{ // over the max string length, cnt return to zero.
@@ -237,39 +228,6 @@ void USART3_IRQHandler(void){
 		}
 	}
 }
-
-
-void USART2_IRQHandler(void){
-
-	// check if the USART1 receive interrupt flag was set
-	if( USART_GetITStatus(USART2, USART_IT_RXNE) ){
-
-		static uint8_t cnt = 0; // this counter is used to determine the string length
-		char t = USART2->DR; // the character from the USART1 data register is saved in t
-
-		/* check if the received character is not the LF character (used to determine end of string) 
-		 * or the if the maximum string length has been been reached 
-		 */
-		if( (t != '\n') && (cnt < MAX_STRLEN) ){ 
-			received_string_2[cnt] = t;
-			cnt++;
-		}
-		else{ // otherwise reset the character counter and print the received string
-			cnt = 0;
-		}
-	}
-}
-/*
-void USART2_IRQHandler(void)  
-{  
-     if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE) == SET)  
-      {       
-              USART_SendData(USART2, USART_ReceiveData(USART2));             
-      }
-      
-}
-*/
-
 
 void USART_puts(USART_TypeDef* USARTx, volatile uint8_t *s) //uint8_t = unsigned char
 {
@@ -341,28 +299,5 @@ char receive_byte()
 }
 
 #if 0
-void receive_task(void *p)
-{
-    int i , j;
-	struct  receive_cmd_list * receive_cmd_type;
-    
-	while (1) {
-		if(Receive_String_Ready ){
-			//GPIO_ToggleBits(GPIOD,GPIO_Pin_14);
-            /*load the accept command string to the command list structure*/
-            receive_cmd_type = received_string;
-            /*identifier the command's format, if yes, analyze the command list and perform it. */
-            if(receive_cmd_type->Identifier[0] =='c' && receive_cmd_type->Identifier[1] =='m' && receive_cmd_type->Identifier[2] =='d'){
-                PerformCommand(receive_cmd_type->group,receive_cmd_type->control_id, receive_cmd_type->value);
-                
-            }
-            
-			/*clear the received string and the flag*/
-			Receive_String_Ready = 0;
-			for( i = 0 ; i< MAX_STRLEN ; i++){
-				received_string[i]= 0;
-			}
-		} 
-	}
-}
+
 #endif

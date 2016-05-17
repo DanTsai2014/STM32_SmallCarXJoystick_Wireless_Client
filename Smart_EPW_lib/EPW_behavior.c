@@ -5,22 +5,11 @@
 #include "timers.h"
 #include "stm32f4xx_usart.h"
 #include "uart.h"
-#include "PWM.h"
-#include "MPU6050.h"
-
-#define B_phase 1
-#define NEURAL_IDENTIFIER 1
-#define PID_ADJUST 1
-#define RECORD_SIZE 750
-char w;
 
 char buff_JOY_x [] = "";
 char buff_JOY_y [] = "";
 char buff_JOY_xx [] = "";
 char buff_JOY_yy [] = "";
-char buff_ACC_x [] = "";
-char buff_ACC_y [] = "";
-char buff_ACC_z [] = "";
 char buff_acc_x_1 [] = "";
 char buff_acc_y_1 [] = "";
 char buff_acc_z_1 [] = "";
@@ -46,7 +35,6 @@ s16 accgyo_2[6]={0};
  /*============================================================================*/
 
 void init_ADC1(void){
-	//__IO uint16_t ADC1ConvertedVoltage[2];
 	ADC_InitTypeDef ADC_InitStructure; //Structure for adc configuration
     ADC_CommonInitTypeDef ADC_CommonInitStructure;
 	GPIO_InitTypeDef GPIO_initStructre; //Structure for analog input pin
@@ -105,9 +93,6 @@ void init_ADC1(void){
 	//Select the channel to be read from
 	ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_144Cycles); //// use channel 10 from ADC1, with sample time 144 cycles
 	ADC_RegularChannelConfig(ADC1, ADC_Channel_11, 2, ADC_SampleTime_144Cycles); //ADC1 multiple channels (channel 11)
-	//ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 3, ADC_SampleTime_144Cycles);
-	//ADC_RegularChannelConfig(ADC1, ADC_Channel_1, 4, ADC_SampleTime_144Cycles);
-	//ADC_RegularChannelConfig(ADC1, ADC_Channel_2, 5, ADC_SampleTime_144Cycles);
 	//Enable DMA request after last transfer (Single-ADC mode)
     ADC_DMARequestAfterLastTransferCmd(ADC1, ENABLE);
     //Enable using ADC_DMA
@@ -125,302 +110,127 @@ void init_ADC1(void){
  **============================================================================*/
 /*============================================================================*/
 
-void parse_Joystick_dir(void *pvParameters) //unsigned uint16_t Joystick_cmd
+void parse_Joystick_dir(void *pvParameters)
 {
 	while(1)
-	{ //2305: 靜止x軸平均值, 2362: 靜止y軸平均值
-	if(ADC1ConvertedVoltage[1] >= 3000 && ADC1ConvertedVoltage[1] - 2371 > ADC1ConvertedVoltage[0] - 2278 && ADC1ConvertedVoltage[1] - 2371 > 2278 - ADC1ConvertedVoltage[0]){ //forward(3000~4095)
-		Joy_dir = 1;
-		USART_puts(USART2, "f");
-		//USART_puts(USART2, "0");
-		Joystick_x_Filter = 2305; //x stop
-		Joystick_y_Filter = ADC1ConvertedVoltage[1];
-		//detect_x_Tremor();
-		//send_Tremor_Warning();
-		//if (data_sending != 1) /*&& car_state == CAR_STATE_IDLE) // Do not control the wheelchair when sending data with usart!
-				//sprintf(buff, "forward\n\r");
-                //Usart3_Printf(buff); // send string to USART3
-
-				//PWM_Control
-				/*TIM_SetCompare1(TIM1, 256 - 1); 
-				TIM_SetCompare2(TIM1, 256 - 1);
-				TIM_SetCompare1(TIM3, 0);
-				//TIM_SetCompare2(TIM3, 127); //minimum: 95
-				TIM_SetCompare3(TIM3, 0);
-				//TIM_SetCompare4(TIM3, 127);
-				//vTaskDelay(100);
-				//detect_x_Tremor();
-				//reset_Wheels();
-				//vTaskDelay(100);
-*/
-				if(ADC1ConvertedVoltage[1] <= 3365){ //min_speed
-					//TIM_SetCompare2(TIM3, 100);//min_speed
-					//TIM_SetCompare4(TIM3, 100);
-					USART_puts(USART2, "1");
-				}
-				else if(ADC1ConvertedVoltage[1] > 3365 && ADC1ConvertedVoltage[1] <= 3730){ 
-					//TIM_SetCompare2(TIM3, 178);//mid_speed
-					//TIM_SetCompare4(TIM3, 178);
-					USART_puts(USART2, "2");
-				}
-				else if(ADC1ConvertedVoltage[1] > 3730){ 
-					//TIM_SetCompare2(TIM3, 255);//max_speed
-				    //TIM_SetCompare4(TIM3, 255);
-				    USART_puts(USART2, "3");
-		        }
-		        vTaskDelay(100);
-		        //detect_x_Tremor();
-		        //send_Tremor_Warning();
-			}
-
-		else if(ADC1ConvertedVoltage[0] < 3000 && ADC1ConvertedVoltage[1] < 3000 && ADC1ConvertedVoltage[0] > 1500 && ADC1ConvertedVoltage[1] > 1500){  //stop
-			Joy_dir = 0;
-			USART_puts(USART2, "s");
-			USART_puts(USART2, "s");
-			Joystick_x_Filter = ADC1ConvertedVoltage[0];
-			Joystick_y_Filter = ADC1ConvertedVoltage[1];
-
-				//car_state = CAR_STATE_STOPPING;
-			//sprintf(buff, "stop\n\r");
-			//send_Tremor_Warning();
-            //Usart3_Printf(buff); // send string to USART3
-			/*TIM_SetCompare1(TIM1, 0);
-			TIM_SetCompare2(TIM1, 0);
-			TIM_SetCompare1(TIM3, 0);
-			TIM_SetCompare2(TIM3, 0);
-			TIM_SetCompare3(TIM3, 0);
-			TIM_SetCompare4(TIM3, 0);
-			vTaskDelay(100);*/
-			//send_Tremor_Warning();
-			//reset_Wheels();
-			vTaskDelay(100);
-		}
-		else if(/*data_sending != 1 && */ADC1ConvertedVoltage[1] <= 1500 && 2371 - ADC1ConvertedVoltage[1] > 2235 - ADC1ConvertedVoltage[0] && 2371 - ADC1ConvertedVoltage[1] > ADC1ConvertedVoltage[0] - 2235){  //backward(1500~0)
-				Joy_dir = 2;
-				USART_puts(USART2, "b");
-				Joystick_x_Filter = 2305;
-				Joystick_y_Filter = ADC1ConvertedVoltage[1];
-				//detect_x_Tremor();
-				//send_Tremor_Warning();
-				//sprintf(buff, "backward\n\r");
-                //Usart3_Printf(buff); // send string to USART3
-				/*TIM_SetCompare1(TIM1, 256 - 1);
-				TIM_SetCompare2(TIM1, 256 - 1);
-				//TIM_SetCompare1(TIM3, 127);
-				TIM_SetCompare2(TIM3, 0);
-				//TIM_SetCompare3(TIM3, 127);
-				TIM_SetCompare4(TIM3, 0);*/
-				//vTaskDelay(100);
-				//detect_x_Tremor();
-				//reset_Wheels();
-				//vTaskDelay(100);
-				if(ADC1ConvertedVoltage[1] > 1000){
-					USART_puts(USART2, "1");
-					//TIM_SetCompare1(TIM3, 100);
-					//TIM_SetCompare3(TIM3, 100);
-				}
-				else if(ADC1ConvertedVoltage[1] > 500 && ADC1ConvertedVoltage[1] <= 1000){
-					USART_puts(USART2, "2");
-					//TIM_SetCompare1(TIM3, 178);
-					//TIM_SetCompare3(TIM3, 178);
-				}
-				else if(ADC1ConvertedVoltage[1] <= 500){
-					USART_puts(USART2, "3");
-					//TIM_SetCompare1(TIM3, 255);
-					//TIM_SetCompare3(TIM3, 255);
-				}
-				vTaskDelay(100);
-				//detect_x_Tremor();
-				//send_Tremor_Warning();
-		}
-        else if(/*data_sending != 1 && */ADC1ConvertedVoltage[0] >= 3000 && ADC1ConvertedVoltage[0] - 2278 > ADC1ConvertedVoltage[1] - 2335 && ADC1ConvertedVoltage[0] -2229 > 2335 - ADC1ConvertedVoltage[1]){  //left(3000~4095)
-                Joy_dir = 3;
-                USART_puts(USART2, "l");
-                Joystick_x_Filter = ADC1ConvertedVoltage[0];
-                Joystick_y_Filter = 2362;
-                //detect_y_Tremor();
-                //send_Tremor_Warning();
-                //sprintf(buff, "left\n\r");
-                //Usart3_Printf(buff); // send string to USART3
-                /*TIM_SetCompare1(TIM1, 256 - 1);
-				TIM_SetCompare2(TIM1, 256 - 1);
-                //TIM_SetCompare1(TIM3, 127);
-                TIM_SetCompare2(TIM3, 0);
-                TIM_SetCompare3(TIM3, 0);*/
-                //TIM_SetCompare4(TIM3, 127);
-                //vTaskDelay(100);
-                //detect_y_Tremor();
-				//reset_Wheels();
-				//vTaskDelay(100);
-				if(ADC1ConvertedVoltage[0] <= 3365){ //min_speed
-					//TIM_SetCompare1(TIM3, 100);
-					//TIM_SetCompare4(TIM3, 100);
-                    USART_puts(USART2, "1");
-				}
-				else if(ADC1ConvertedVoltage[0] > 3365 && ADC1ConvertedVoltage[0] <= 3730){ //mid_speed
-					//TIM_SetCompare1(TIM3, 178);
-					//TIM_SetCompare4(TIM3, 178);
-					USART_puts(USART2, "2");
-				}
-				else if(ADC1ConvertedVoltage[0] > 3730){ //max_speed
-					//TIM_SetCompare1(TIM3, 255);
-				    //TIM_SetCompare4(TIM3, 255);
-				    USART_puts(USART2, "3");
-		        }
-		        vTaskDelay(100);
-		        //detect_y_Tremor();
-		        //send_Tremor_Warning();
-		}
-        else if(/*data_sending != 1 && */ADC1ConvertedVoltage[0] <= 1500 && 2278 - ADC1ConvertedVoltage[0] > 2408 - ADC1ConvertedVoltage[1] && 2278 - ADC1ConvertedVoltage[0] > ADC1ConvertedVoltage[1] - 2408){  //right(1500~0)
-                Joy_dir = 4;
-                USART_puts(USART2, "r");
-                Joystick_x_Filter = ADC1ConvertedVoltage[0];
-                Joystick_y_Filter = 2362;
-                //detect_y_Tremor();
-                //send_Tremor_Warning();
-                //sprintf(buff, "right\n\r");
-                //Usart3_Printf(buff); // send string to USART3
-                /*TIM_SetCompare1(TIM1, 256 - 1);
-				TIM_SetCompare2(TIM1, 256 - 1);
-                TIM_SetCompare1(TIM3, 0);
-                //TIM_SetCompare2(TIM3, 127);
-                //TIM_SetCompare3(TIM3, 127);
-                TIM_SetCompare4(TIM3, 0);*/
-                //vTaskDelay(100);
-                //detect_y_Tremor();
-				//reset_Wheels();
-				//vTaskDelay(100);
-				if(ADC1ConvertedVoltage[0] > 1000){
-					USART_puts(USART2, "1");
-					//TIM_SetCompare2(TIM3, 100);
-					//TIM_SetCompare3(TIM3, 100);
-				}
-				else if(ADC1ConvertedVoltage[0] > 500 && ADC1ConvertedVoltage[0] <= 1000){
-					USART_puts(USART2, "2");
-					//TIM_SetCompare2(TIM3, 178);
-					//TIM_SetCompare3(TIM3, 178);
-				}
-				else if(ADC1ConvertedVoltage[0] <= 500){
-					USART_puts(USART2, "3");
-					//TIM_SetCompare2(TIM3, 255);
-					//TIM_SetCompare3(TIM3, 255);
-				}
-				vTaskDelay(100);
-				//detect_y_Tremor();
-				//send_Tremor_Warning();
-		}
-		/*Detect the tremor and send a warning to android*/
-		/*if(((ADC1ConvertedVoltage[0] <= 2200 && ADC1ConvertedVoltage[0] >= 1975) || (ADC1ConvertedVoltage[0] >= 2350 && ADC1ConvertedVoltage[0] <= 2555)) || 
-	            ((ADC1ConvertedVoltage[1] <= 2335 && ADC1ConvertedVoltage[1] >= 2239) || (ADC1ConvertedVoltage[1] >= 2380 && ADC1ConvertedVoltage[1] <= 2480))){
-			tremor_count ++;*/
-		    /*if(tremor_count > 1){
-		    	
-		    	while(USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET);
-		    	USART_SendData(USART3, "w"); //send a warning of tremor to android
-		    	tremor_count = 0;
-		    	vTaskDelay(1);
+	{ //2305: static x-axis mean, 2362: static y-axis mean
+		if(ADC1ConvertedVoltage[1] >= 3000 && ADC1ConvertedVoltage[1] - 2371 > ADC1ConvertedVoltage[0] - 2278 && ADC1ConvertedVoltage[1] - 2371 > 2278 - ADC1ConvertedVoltage[0]){ //forward(3000~4095)
+			USART_puts(USART2, "f");
+		    Joystick_x_Filter = 2305; //x stop
+		    Joystick_y_Filter = ADC1ConvertedVoltage[1];
+		    if(ADC1ConvertedVoltage[1] <= 3365){ //min_speed
+		    	USART_puts(USART2, "1");
 		    }
-		}*/
-		else{
-		}
- }
-}
+		    else if(ADC1ConvertedVoltage[1] > 3365 && ADC1ConvertedVoltage[1] <= 3730){
+		    	USART_puts(USART2, "2");
+		    }
+		    else if(ADC1ConvertedVoltage[1] > 3730){
+		    	USART_puts(USART2, "3");
+		    }
+		    vTaskDelay(100);
+	    }
 
-void send_MPU6050_data(){
-	while(1){
-		USART_puts(USART3, "DATA,TIME,,");
-
-		sprintf(buff_JOY_x, "%d,", ADC1ConvertedVoltage[0]);//JOY_x: 
-		Usart3_Printf(buff_JOY_x);
-
-		//Usart3_Printf("b");
-		sprintf(buff_JOY_y, "%d,", ADC1ConvertedVoltage[1]);//JOY_y: 
-		Usart3_Printf(buff_JOY_y);
-
-		sprintf(buff_JOY_xx, "%d,",Joystick_x_Filter);//JOY_xx: 
-		Usart3_Printf(buff_JOY_xx);
-
-		sprintf(buff_JOY_yy, "%d,",Joystick_y_Filter);//JOY_yy: 
-		Usart3_Printf(buff_JOY_yy);
-
-/*
-		MPU6050_GetRawAccelGyro_1(accgyo_1);
-        sprintf(buff_acc_x_1, "%d,", accgyo_1[0]);//ACC1_x: 
-        Usart3_Printf(buff_acc_x_1);
-        sprintf(buff_acc_y_1, "%d,", accgyo_1[1]);//ACC1_y: 
-        Usart3_Printf(buff_acc_y_1);
-        sprintf(buff_acc_z_1, "%d,", accgyo_1[2]);//ACC1_z: 
-        Usart3_Printf(buff_acc_z_1);
-
-        sprintf(buff_ang_x_1, "%d,", accgyo_1[3]);//ANG1_x: 
-        Usart3_Printf(buff_ang_x_1);
-        sprintf(buff_ang_y_1, "%d,", accgyo_1[4]);//ANG1_y: 
-        Usart3_Printf(buff_ang_y_1);
-        sprintf(buff_ang_z_1, "%d,", accgyo_1[5]);//ANG1_z: 
-        Usart3_Printf(buff_ang_z_1);
-
-        MPU6050_GetRawAccelGyro_2(accgyo_2);
-        sprintf(buff_acc_x_2, "%d,", accgyo_2[0]);//ACC2_x: 
-        Usart3_Printf(buff_acc_x_2);
-        sprintf(buff_acc_y_2, "%d,", accgyo_2[1]);//ACC2_y: 
-        Usart3_Printf(buff_acc_y_2);
-        sprintf(buff_acc_z_2, "%d,", accgyo_2[2]);//ACC2_z: 
-        Usart3_Printf(buff_acc_z_2);
-
-        sprintf(buff_ang_x_2, "%d,", accgyo_2[3]);//ANG2_x: 
-        Usart3_Printf(buff_ang_x_2);
-        sprintf(buff_ang_y_2, "%d,", accgyo_2[4]);//ANG2_y: 
-        Usart3_Printf(buff_ang_y_2);
-        sprintf(buff_ang_z_2, "%d\r\n", accgyo_2[5]);//ANG2_z: 
-        Usart3_Printf(buff_ang_z_2);
-*/
-        vTaskDelay(1000);
+	    else if(ADC1ConvertedVoltage[0] < 3000 && ADC1ConvertedVoltage[1] < 3000 && ADC1ConvertedVoltage[0] > 1500 && ADC1ConvertedVoltage[1] > 1500){  //stop
+	    	USART_puts(USART2, "s");
+		    USART_puts(USART2, "s");
+		    Joystick_x_Filter = ADC1ConvertedVoltage[0];
+		    Joystick_y_Filter = ADC1ConvertedVoltage[1];
+		    vTaskDelay(100);
+	    }
+	    else if(ADC1ConvertedVoltage[1] <= 1500 && 2371 - ADC1ConvertedVoltage[1] > 2235 - ADC1ConvertedVoltage[0] && 2371 - ADC1ConvertedVoltage[1] > ADC1ConvertedVoltage[0] - 2235){  //backward(1500~0)
+	        USART_puts(USART2, "b");
+		    Joystick_x_Filter = 2305;
+		    Joystick_y_Filter = ADC1ConvertedVoltage[1];
+		    if(ADC1ConvertedVoltage[1] > 1000){
+			    USART_puts(USART2, "1");
+		    }
+		    else if(ADC1ConvertedVoltage[1] > 500 && ADC1ConvertedVoltage[1] <= 1000){
+			    USART_puts(USART2, "2");
+		    }
+		    else if(ADC1ConvertedVoltage[1] <= 500){
+			    USART_puts(USART2, "3");
+		    }
+		    vTaskDelay(100);
+	    }
+        else if(ADC1ConvertedVoltage[0] >= 3000 && ADC1ConvertedVoltage[0] - 2278 > ADC1ConvertedVoltage[1] - 2335 && ADC1ConvertedVoltage[0] -2229 > 2335 - ADC1ConvertedVoltage[1]){  //left(3000~4095)
+    	    USART_puts(USART2, "l");
+            Joystick_x_Filter = ADC1ConvertedVoltage[0];
+            Joystick_y_Filter = 2362;
+		    if(ADC1ConvertedVoltage[0] <= 3365){ //min_speed
+			    USART_puts(USART2, "1");
+		    }
+		    else if(ADC1ConvertedVoltage[0] > 3365 && ADC1ConvertedVoltage[0] <= 3730){ //mid_speed
+			    USART_puts(USART2, "2");
+		    }
+		    else if(ADC1ConvertedVoltage[0] > 3730){ //max_speed
+			    USART_puts(USART2, "3");
+		    }
+		    vTaskDelay(100);
+	    }
+        else if(ADC1ConvertedVoltage[0] <= 1500 && 2278 - ADC1ConvertedVoltage[0] > 2408 - ADC1ConvertedVoltage[1] && 2278 - ADC1ConvertedVoltage[0] > ADC1ConvertedVoltage[1] - 2408){  //right(1500~0)
+    	    USART_puts(USART2, "r");
+            Joystick_x_Filter = ADC1ConvertedVoltage[0];
+            Joystick_y_Filter = 2362;
+		    if(ADC1ConvertedVoltage[0] > 1000){
+			    USART_puts(USART2, "1");
+		    }
+		    else if(ADC1ConvertedVoltage[0] > 500 && ADC1ConvertedVoltage[0] <= 1000){
+			    USART_puts(USART2, "2");
+		    }
+		    else if(ADC1ConvertedVoltage[0] <= 500){
+			    USART_puts(USART2, "3");
+		    }
+		    vTaskDelay(100);
+	    }
+	    else{
+	    }
     }
 }
 
-void detect_x_Tremor(){
-	if((ADC1ConvertedVoltage[0] <= 2200 && ADC1ConvertedVoltage[0] >= 1975) || (ADC1ConvertedVoltage[0] >= 2350 && ADC1ConvertedVoltage[0] <= 2555))
-		tremor_count ++;
-}
+void send_Joystick_MPU6050_data(){
+	while(1){
+		USART_puts(USART3, "DATA,TIME,,");
 
-void detect_y_Tremor(){
-	if((ADC1ConvertedVoltage[1] <= 2335 && ADC1ConvertedVoltage[1] >= 2239) || (ADC1ConvertedVoltage[1] >= 2380 && ADC1ConvertedVoltage[1] <= 2480))
-		tremor_count ++;
-}
+		sprintf(buff_JOY_x, "%d,", ADC1ConvertedVoltage[0]);
+		Usart3_Printf(buff_JOY_x);
+		sprintf(buff_JOY_y, "%d,", ADC1ConvertedVoltage[1]);
+		Usart3_Printf(buff_JOY_y);
 
-void send_Tremor_Warning(void *pvParameters){
-	//while(tremor_count > 1){
-    while(1){
-		//while(USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET);
-		//sprintf(buff, "tremor_count = %d\n\r", tremor_count);
-		//Usart3_Printf(buff);
-		/*switch(Joy_dir)
-		{
-			case 1:
-			    detect_x_Tremor();
-			    break;
-			case 2:
-			    detect_x_Tremor();
-			    break;
-			case 3:
-			    detect_y_Tremor();
-			    break;
-			case 4:
-			    detect_y_Tremor();
-			    break;
-		}*/
-			    if(Joy_dir == 1)
-			    	detect_x_Tremor();
-			    if(Joy_dir == 2)
-			    	detect_x_Tremor();
-			    if(Joy_dir == 3)
-			    	detect_y_Tremor();
-			    if(Joy_dir == 4)
-			    	detect_y_Tremor();
-		if(tremor_count > 1){
-			printf("%d\n\r", tremor_count);
-		    //tremor_count = 0;
-		    vTaskDelay(1);
-		}
-}
+		sprintf(buff_JOY_xx, "%d,",Joystick_x_Filter);
+		Usart3_Printf(buff_JOY_xx);
+		sprintf(buff_JOY_yy, "%d,",Joystick_y_Filter);
+		Usart3_Printf(buff_JOY_yy);
+
+		MPU6050_GetRawAccelGyro_1(accgyo_1);
+        sprintf(buff_acc_x_1, "%d,", accgyo_1[0]);
+        Usart3_Printf(buff_acc_x_1);
+        sprintf(buff_acc_y_1, "%d,", accgyo_1[1]);
+        Usart3_Printf(buff_acc_y_1);
+        sprintf(buff_acc_z_1, "%d,", accgyo_1[2]);
+        Usart3_Printf(buff_acc_z_1);
+
+        sprintf(buff_ang_x_1, "%d,", accgyo_1[3]);
+        Usart3_Printf(buff_ang_x_1);
+        sprintf(buff_ang_y_1, "%d,", accgyo_1[4]);
+        Usart3_Printf(buff_ang_y_1);
+        sprintf(buff_ang_z_1, "%d,", accgyo_1[5]);
+        Usart3_Printf(buff_ang_z_1);
+
+        MPU6050_GetRawAccelGyro_2(accgyo_2);
+        sprintf(buff_acc_x_2, "%d,", accgyo_2[0]);
+        Usart3_Printf(buff_acc_x_2);
+        sprintf(buff_acc_y_2, "%d,", accgyo_2[1]);
+        Usart3_Printf(buff_acc_y_2);
+        sprintf(buff_acc_z_2, "%d,", accgyo_2[2]);
+        Usart3_Printf(buff_acc_z_2);
+
+        sprintf(buff_ang_x_2, "%d,", accgyo_2[3]);
+        Usart3_Printf(buff_ang_x_2);
+        sprintf(buff_ang_y_2, "%d,", accgyo_2[4]);
+        Usart3_Printf(buff_ang_y_2);
+        sprintf(buff_ang_z_2, "%d\r\n", accgyo_2[5]);
+        Usart3_Printf(buff_ang_z_2);
+
+        vTaskDelay(1000);
+    }
 }
