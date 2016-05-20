@@ -86,7 +86,7 @@ int main(void) {
   //PLX-DAQ
   USART_puts(USART3, "CLEARDATA"); //clears up any data left from previous projects
   USART_puts(USART3, "\r\n");
-  USART_puts(USART3, "LABEL,Time,JOY_x,JOY_y,JOY_xx,JOY_yy,ACC1_x,ACC1_y,ACC1_z,ANG1_x,ANG1_y,ANG1_z,ACC2_x,ACC2_y,ACC2_z,ANG2_x,ANG2_y,ANG2_z"); //always write LABEL, so excel knows the next things will be the names of the columns (instead of Acolumn you could write Time for instance)
+  USART_puts(USART3, "LABEL,Time,JOY_x,JOY_y,JOY_xx,JOY_yy,ACC1_x,ACC1_y,ACC1_z,ACC2_x,ACC2_y,ACC2_z,ANG1_x,ANG1_y,ANG1_z,ANG2_x,ANG2_y,ANG2_z"); //always write LABEL, so excel knows the next things will be the names of the columns (instead of Acolumn you could write Time for instance)
   USART_puts(USART3, "\r\n");
   USART_puts(USART3, "RESETTIMER"); //resets timer to 0
   USART_puts(USART3, "\r\n");

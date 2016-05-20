@@ -202,6 +202,7 @@ void send_Joystick_MPU6050_data(){
 		Usart3_Printf(buff_JOY_yy);
 
 		MPU6050_GetRawAccelGyro_1(accgyo_1);
+		MPU6050_GetRawAccelGyro_2(accgyo_2);
         sprintf(buff_acc_x_1, "%d,", accgyo_1[0]);
         Usart3_Printf(buff_acc_x_1);
         sprintf(buff_acc_y_1, "%d,", accgyo_1[1]);
@@ -209,20 +210,19 @@ void send_Joystick_MPU6050_data(){
         sprintf(buff_acc_z_1, "%d,", accgyo_1[2]);
         Usart3_Printf(buff_acc_z_1);
 
-        sprintf(buff_ang_x_1, "%d,", accgyo_1[3]);
-        Usart3_Printf(buff_ang_x_1);
-        sprintf(buff_ang_y_1, "%d,", accgyo_1[4]);
-        Usart3_Printf(buff_ang_y_1);
-        sprintf(buff_ang_z_1, "%d,", accgyo_1[5]);
-        Usart3_Printf(buff_ang_z_1);
-
-        MPU6050_GetRawAccelGyro_2(accgyo_2);
         sprintf(buff_acc_x_2, "%d,", accgyo_2[0]);
         Usart3_Printf(buff_acc_x_2);
         sprintf(buff_acc_y_2, "%d,", accgyo_2[1]);
         Usart3_Printf(buff_acc_y_2);
         sprintf(buff_acc_z_2, "%d,", accgyo_2[2]);
         Usart3_Printf(buff_acc_z_2);
+
+        sprintf(buff_ang_x_1, "%d,", accgyo_1[3]);
+        Usart3_Printf(buff_ang_x_1);
+        sprintf(buff_ang_y_1, "%d,", accgyo_1[4]);
+        Usart3_Printf(buff_ang_y_1);
+        sprintf(buff_ang_z_1, "%d,", accgyo_1[5]);
+        Usart3_Printf(buff_ang_z_1);
 
         sprintf(buff_ang_x_2, "%d,", accgyo_2[3]);
         Usart3_Printf(buff_ang_x_2);
