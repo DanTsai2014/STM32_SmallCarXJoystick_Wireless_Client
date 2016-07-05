@@ -27,7 +27,7 @@ void MPU6050_Write(uint8_t slaveAddr, uint8_t regAddr, uint8_t data)
 {
     uint8_t tmp;  
     tmp = data;
-    MPU6050_I2C_ByteWrite(slaveAddr,&tmp,regAddr);   
+    MPU6050_I2C_ByteWrite(slaveAddr,&tmp,regAddr);
 }
 
 void MPU6050_I2C_ByteWrite(u8 slaveAddr, u8 pBuffer, u8 writeAddr)
@@ -101,14 +101,17 @@ void MPU6050_GetRawAccelGyro_1(s16* AccelGyro_1)//读加速度值 和 角速度�
 {
 	u8 i;
 	MPU6050_I2C_BufferRead(MPU6050_DEFAULT_ADDRESS, I2C_Rx_Buffer_1, MPU6050_RA_ACCEL_XOUT_H, 14); //读 RA_ACCEL_XOUT_H 寄存器的值
+    //MPU6050_I2C_BufferRead(slaveAddr, &tmp, regAddr, 1); 
     //Read Accel data from byte 0 to byte 2
 	/* Get acceleration, skip byte 3 of temperature data*/
-	for (i = 0; i < 3; i++)
-	AccelGyro_1[i] = ((s16) ((u16) I2C_Rx_Buffer_1[2 * i] << 8) + I2C_Rx_Buffer_1[2 * i + 1]);
+	for (i = 0; i < 3; i++){
+        AccelGyro_1[i] = ((s16) ((u16) I2C_Rx_Buffer_1[2 * i] << 8) + I2C_Rx_Buffer_1[2 * i + 1]);
+    }
     //Read Gyro data from byte 4 to byte 6
 	/* Get Angular rate */
-	for (i = 4; i < 7; i++)//在此跳过温度寄存器，不需要温度值
-	AccelGyro_1[i - 1] = ((s16) ((u16) I2C_Rx_Buffer_1[2 * i] << 8) + I2C_Rx_Buffer_1[2 * i + 1]);
+	for (i = 4; i < 7; i++){//在此跳过温度寄存器，不需要温度值
+        AccelGyro_1[i - 1] = ((s16) ((u16) I2C_Rx_Buffer_1[2 * i] << 8) + I2C_Rx_Buffer_1[2 * i + 1]);
+    }
 }
 void MPU6050_GetRawAccelGyro_2(s16* AccelGyro_2)//读加速度值 和 角速度值
 {
@@ -239,3 +242,85 @@ uint8_t MPU6050_GetDeviceID_1()
     return tmp; 
 }
 
+void mpu6050_setXAccelOffset_1(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_XA_OFFS_H, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+void mpu6050_setYAccelOffset_1(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_XA_OFFS_H, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+void mpu6050_setZAccelOffset_1(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_XA_OFFS_H, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+
+void mpu6050_setXGyroOffset_1(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_XG_OFFS_USRH, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+void mpu6050_setYGyroOffset_1(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_YG_OFFS_USRH, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+void mpu6050_setZGyroOffset_1(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_ZG_OFFS_USRH, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+
+void mpu6050_setXAccelOffset_2(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_SECOND_ADDRESS, MPU6050_RA_XA_OFFS_L_TC, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+void mpu6050_setYAccelOffset_2(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_SECOND_ADDRESS, MPU6050_RA_YA_OFFS_L_TC, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+void mpu6050_setZAccelOffset_2(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_SECOND_ADDRESS, MPU6050_RA_ZA_OFFS_L_TC, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+
+void mpu6050_setXGyroOffset_2(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_SECOND_ADDRESS, MPU6050_RA_XG_OFFS_USRL, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+void mpu6050_setYGyroOffset_2(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_SECOND_ADDRESS, MPU6050_RA_YG_OFFS_USRL, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+void mpu6050_setZGyroOffset_2(int8_t offset) {
+    MPU6050_WriteBits(MPU6050_SECOND_ADDRESS, MPU6050_RA_ZG_OFFS_USRL, MPU6050_TC_OFFSET_BIT, MPU6050_TC_OFFSET_LENGTH, offset);
+}
+
+/*
+ * read bits from chip register
+ */
+/*int8_t mpu6050_readBits(uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data) {
+    // 01101001 read byte
+    // 76543210 bit numbers
+    //    xxx   args: bitStart=4, length=3
+    //    010   masked
+    //   -> 010 shifted
+    int8_t count = 0;
+    if(length > 0) {
+        uint8_t b;
+        if ((count = mpu6050_readByte(regAddr, &b)) != 0) {
+            uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
+            b &= mask;
+            b >>= (bitStart - length + 1);
+            *data = b;
+        }
+    }
+    return count;
+}*/
+/*
+void mpu6050_writeBits(uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t data) {
+    //      010 value to write
+    // 76543210 bit numbers
+    //    xxx   args: bitStart=4, length=3
+    // 00011100 mask byte
+    // 10101111 original value (sample)
+    // 10100011 original & ~mask
+    // 10101011 masked | value
+    if(length > 0) {
+        uint8_t b = 0;
+        if (mpu6050_readByte(regAddr, &b) != 0) { //get current data
+            uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
+            data <<= (bitStart - length + 1); // shift data into correct position
+            data &= mask; // zero all non-important bits in data
+            b &= ~(mask); // zero all important bits in existing byte
+            b |= data; // combine data with existing byte
+            mpu6050_writeByte(regAddr, b);
+        }
+    }
+}*/

@@ -392,5 +392,8 @@ static void i2cUnstick(void);
 
 int MPU6050_GetFIFO(int *FIFO_Data);
 
+#define MPU6050_TC_OFFSET_BIT       6
+#define MPU6050_TC_OFFSET_LENGTH    6
+
 #endif /* __MPU6050_H */
 /******************* (C) COPYRIGHT 2012 Harinadha Reddy Chintalapalli *****END OF FILE****/

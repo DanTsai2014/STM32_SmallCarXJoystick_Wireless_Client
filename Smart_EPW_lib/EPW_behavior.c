@@ -24,7 +24,16 @@ char buff_ang_y_2 [] = "";
 char buff_ang_z_2 [] = "";
 s16 accgyo_1[6]={0};
 s16 accgyo_2[6]={0};
-
+//fuzzy variable
+float membership[5];
+int16_t xthreshold1 = 1100;
+int16_t xthreshold2 = 2900;
+int16_t ythreshold1 = 1000;
+int16_t ythreshold2 = 2900;
+char xthreshold1_buffer [] = "";
+char xthreshold2_buffer [] = "";
+char ythreshold1_buffer [] = "";
+char ythreshold2_buffer [] = "";
 /*============================================================================*/
 /*============================================================================*
  ** function : init_ADC
@@ -43,8 +52,7 @@ void init_ADC1(void){
 	//Clock configuration
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE); //The ADC1 is connected the APB2 peripheral bus thus we will use its clock source
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_DMA2, ENABLE); //Clock for the ADC port!! Do not forget about this one ;)
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-	//Analog pin configuration
+    //Analog pin configuration
 	GPIO_StructInit(&GPIO_initStructre);
 	GPIO_initStructre.GPIO_Pin = JOYSTICK_X_AXIS_PIN | JOYSTICK_Y_AXIS_PIN; //The channel 10 is connected to PC0; PC1 if multiple channels
 	GPIO_initStructre.GPIO_Mode = GPIO_Mode_AN; //The PC0 pin is configured in analog mode
@@ -114,7 +122,116 @@ void parse_Joystick_dir(void *pvParameters)
 {
 	while(1)
 	{ //2305: static x-axis mean, 2362: static y-axis mean
-		if(ADC1ConvertedVoltage[1] >= 3000 && ADC1ConvertedVoltage[1] - 2371 > ADC1ConvertedVoltage[0] - 2278 && ADC1ConvertedVoltage[1] - 2371 > 2278 - ADC1ConvertedVoltage[0]){ //forward(3000~4095)
+		int fuzzy_th(int error)
+        {
+        	char n;
+            float rule[5]={100,50,0,-50,-100};
+            float num=0,den=0,crisp=0,grade1,grade2,slope;
+
+            if(error<=membership[0])
+            {
+            	grade1=1; grade2=0; num=num+rule[0]; den=den+1;
+            }
+            else if(error>membership[4])
+            {
+            	grade1=0; grade2=1; num=num+rule[4]; den=den+1;
+            }
+            else
+            {
+            	for(n=0;n<4;n++)
+                {
+                	slope=-1/(membership[n+1]-membership[n]);
+                    if((error>membership[n])&&(error<=membership[n+1]))
+                    {
+                    	grade1=slope*(error-membership[n+1]);
+                        grade2=slope*(membership[n]-error);
+                        num=num+grade1*rule[n]+grade2*rule[n+1];
+                        den=den+grade1+grade2;
+                    }
+                }
+            }
+            crisp=num/den;
+            return crisp;
+        }
+        //right fuzzy
+        if(ADC1ConvertedVoltage[0]>=450 && ADC1ConvertedVoltage[0]<=2100)
+        {
+            float membership[5]={-1650,-825,0,825,1650};
+        	xthreshold1=xthreshold1+fuzzy_th(ADC1ConvertedVoltage[0]-xthreshold1);
+            if(xthreshold1<450)
+            {
+            	xthreshold1=450;
+            }
+            if(xthreshold1>2100)
+            {
+            	xthreshold1=2100;
+            }
+        }
+        //left fuzzy
+        if(ADC1ConvertedVoltage[0]>=2400 && ADC1ConvertedVoltage[0]<=3750)
+        {
+        	float membership[5]={-1350,-675,0,675,1350};
+        	xthreshold2=xthreshold2+fuzzy_th(ADC1ConvertedVoltage[0]-xthreshold2);
+            if(xthreshold2<2400)
+            {
+            	xthreshold2=2400;
+            }
+            if(xthreshold2>3750)
+            {
+        	    xthreshold2=3750;
+        	}
+        }
+        //backward fuzzy
+        if(ADC1ConvertedVoltage[1]>=450 && ADC1ConvertedVoltage[1]<=1900)
+        {
+        	float membership[5]={-1450,-725,0,725,1450};
+            ythreshold1=ythreshold1+fuzzy_th(ADC1ConvertedVoltage[1]-ythreshold1);
+            if(ythreshold1>1900)
+            {
+            	ythreshold1=1900;
+            }
+            if(ythreshold1<450)
+            {
+            	ythreshold1=450;
+            }
+        }
+        //forward fuzzy
+        if(ADC1ConvertedVoltage[1]>=2400 && ADC1ConvertedVoltage[1]<=3750)
+        {
+        	float membership[5]={-1350,-675,0,675,1350};
+        	ythreshold2=ythreshold2+fuzzy_th(ADC1ConvertedVoltage[1]-ythreshold2);
+            if(ythreshold2<2400)
+            {
+            	ythreshold2=2400;
+            }
+            if(ythreshold2>3750)
+            {
+            	ythreshold2=3750;
+            }
+        }
+
+        vTaskDelay(500);
+
+        //Movement
+        if(ADC1ConvertedVoltage[0] > xthreshold1) //right
+        {
+        	USART_puts(USART2, "r");
+        }
+		if(ADC1ConvertedVoltage[0] > xthreshold2) //left
+		{
+            USART_puts(USART2, "l");
+        }
+        if(ADC1ConvertedVoltage[1] > ythreshold1) //backward
+        {
+        	USART_puts(USART2, "b");
+        }
+        if(ADC1ConvertedVoltage[1] > ythreshold2) //forward
+        {
+        	USART_puts(USART2, "f");
+        }
+
+
+		/*if(ADC1ConvertedVoltage[1] >= 3000 && ADC1ConvertedVoltage[1] - 2371 > ADC1ConvertedVoltage[0] - 2278 && ADC1ConvertedVoltage[1] - 2371 > 2278 - ADC1ConvertedVoltage[0]){ //forward(3000~4095)
 			USART_puts(USART2, "f");
 		    Joystick_x_Filter = 2305; //x stop
 		    Joystick_y_Filter = ADC1ConvertedVoltage[1];
@@ -183,7 +300,7 @@ void parse_Joystick_dir(void *pvParameters)
 		    vTaskDelay(100);
 	    }
 	    else{
-	    }
+	    }*/
     }
 }
 
@@ -193,16 +310,27 @@ void send_Joystick_MPU6050_data(){
 
 		sprintf(buff_JOY_x, "%d,", ADC1ConvertedVoltage[0]);
 		Usart3_Printf(buff_JOY_x);
-		sprintf(buff_JOY_y, "%d,", ADC1ConvertedVoltage[1]);
+		sprintf(buff_JOY_y, "%d\r\n", ADC1ConvertedVoltage[1]);
 		Usart3_Printf(buff_JOY_y);
 
+        //dynamic threshold (fuzzy)
+		sprintf(xthreshold1_buffer, "x1=%d\r\n", xthreshold1);
+		Usart3_Printf(xthreshold1_buffer);
+		sprintf(xthreshold2_buffer, "x2=%d\r\n", xthreshold2);
+		Usart3_Printf(xthreshold2_buffer);
+		sprintf(ythreshold1_buffer, "y1=%d\r\n", ythreshold1);
+		Usart3_Printf(ythreshold1_buffer);
+		sprintf(ythreshold2_buffer, "y2=%d\r\n", ythreshold2);
+		Usart3_Printf(ythreshold2_buffer);
+/*
 		sprintf(buff_JOY_xx, "%d,",Joystick_x_Filter);
 		Usart3_Printf(buff_JOY_xx);
 		sprintf(buff_JOY_yy, "%d,",Joystick_y_Filter);
-		Usart3_Printf(buff_JOY_yy);
-
+		Usart3_Printf(buff_JOY_yy);*/
+/*
 		MPU6050_GetRawAccelGyro_1(accgyo_1);
 		MPU6050_GetRawAccelGyro_2(accgyo_2);
+
         sprintf(buff_acc_x_1, "%d,", accgyo_1[0]);
         Usart3_Printf(buff_acc_x_1);
         sprintf(buff_acc_y_1, "%d,", accgyo_1[1]);
@@ -230,7 +358,7 @@ void send_Joystick_MPU6050_data(){
         Usart3_Printf(buff_ang_y_2);
         sprintf(buff_ang_z_2, "%d\r\n", accgyo_2[5]);
         Usart3_Printf(buff_ang_z_2);
-
+*/
         vTaskDelay(1000);
     }
 }
