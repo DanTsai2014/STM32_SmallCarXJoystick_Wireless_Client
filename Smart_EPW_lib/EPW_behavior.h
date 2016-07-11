@@ -21,6 +21,8 @@ int16_t ADC1ConvertedVoltage[2]; //or array? /*Joystick's ADC*/
 int16_t Joystick_x_Filter;
 int16_t Joystick_y_Filter;
 
+int fuzzy_th(int error);
+
 /*===============end of define  the all by pins========================*/
 
 extern void parse_Joystick_dir();

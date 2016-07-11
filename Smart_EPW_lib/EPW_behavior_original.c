@@ -124,7 +124,37 @@ void parse_Joystick_dir(void *pvParameters)
 {
 	while(1)
 	{ //2305: static x-axis mean, 2362: static y-axis mean
-		
+		int fuzzy_th(int error)
+        {
+        	char n;
+            float rule[5]={50,25,0,-25,-50};
+            float num=0,den=0,crisp=0,grade1,grade2,slope;
+
+            if(error<=membership[0])
+            {
+            	grade1=1; grade2=0; num=num+rule[0]; den=den+1;
+            }
+            else if(error>membership[4])
+            {
+            	grade1=0; grade2=1; num=num+rule[4]; den=den+1;
+            }
+            else
+            {
+            	for(n=0;n<4;n++)
+                {
+                	slope=-1/(membership[n+1]-membership[n]);
+                    if((error>membership[n])&&(error<=membership[n+1]))
+                    {
+                    	grade1=slope*(error-membership[n+1]);
+                        grade2=slope*(membership[n]-error);
+                        num=num+grade1*rule[n]+grade2*rule[n+1];
+                        den=den+grade1+grade2;
+                    }
+                }
+            }
+            crisp=num/den;
+            return crisp;
+        }
         //right fuzzy
         if((ADC1ConvertedVoltage[0]-xthreshold1)>=-400 && (ADC1ConvertedVoltage[0]-xthreshold1)<=400)
         {
@@ -138,8 +168,14 @@ void parse_Joystick_dir(void *pvParameters)
             {
             	xthreshold1=1900;
             }
-        }
-
+            /*if(ADC1ConvertedVoltage[0] < xthreshold1) //right
+            {
+                //USART_puts(USART2, "r");
+                //USART_puts(USART3, "r");
+                vTaskDelay(100);
+            }*/
+            
+        }vTaskDelay(10);
         //left fuzzy
         if((ADC1ConvertedVoltage[0]-xthreshold2)>=-400 && (ADC1ConvertedVoltage[0]-xthreshold2)<=400)
         {
@@ -153,7 +189,15 @@ void parse_Joystick_dir(void *pvParameters)
             {
         	    xthreshold2=3400;
         	}
-        }
+            if(ADC1ConvertedVoltage[0] > xthreshold2)
+            {
+                USART_puts(USART3, "ld");
+                //USART_puts(USART2, "ld");
+                vTaskDelay(500);
+            }
+            
+            
+        }vTaskDelay(10);
         //backward fuzzy
         if((ADC1ConvertedVoltage[1]-ythreshold1)>=-400 && (ADC1ConvertedVoltage[1]-ythreshold1)<=400)
         {
@@ -167,7 +211,14 @@ void parse_Joystick_dir(void *pvParameters)
             {
             	ythreshold1=1900;
             }
-        }
+            /*if(ADC1ConvertedVoltage[1] < ythreshold1) //backward
+            {
+                //USART_puts(USART2, "b");
+                //USART_puts(USART3, "b");
+                vTaskDelay(100);
+            }*/
+            
+        }vTaskDelay(10);
         //forward fuzzy
         if((ADC1ConvertedVoltage[1]-ythreshold2)>=-400 && (ADC1ConvertedVoltage[1]-ythreshold2)<=400)
         {
@@ -181,41 +232,123 @@ void parse_Joystick_dir(void *pvParameters)
             {
             	ythreshold2=3400;
             }
+            /*if(ADC1ConvertedVoltage[1] > ythreshold2) //forward
+            {
+                //USART_puts(USART2, "f");
+                //USART_puts(USART3, "f");
+                vTaskDelay(100);
+            }*/
+            
+        }vTaskDelay(10);
+  
+        //stop
+        if(ADC1ConvertedVoltage[0]>xthreshold1 && ADC1ConvertedVoltage[0]<xthreshold2 && ADC1ConvertedVoltage[1]>ythreshold1 && ADC1ConvertedVoltage[1]<ythreshold2)
+        {
+            USART_puts(USART3, "sd");
+            //USART_puts(USART2, "sd");
+            vTaskDelay(500);
         }
-        vTaskDelay(10); //must delay
 
-        //movements
-        if(ADC1ConvertedVoltage[0] < xthreshold1) //right
+        vTaskDelay(10); //must
+/*
+        //Movement
+        if(ADC1ConvertedVoltage[0] > xthreshold1) //right
         {
-            USART_puts(USART2, "rd");
-            //USART_puts(USART3, "rd");
-            vTaskDelay(1000);
+        	USART_puts(USART2, "r");
+            USART_puts(USART3, "r");
         }
-        if(ADC1ConvertedVoltage[0] > xthreshold2) //left
-        {
-            //USART_puts(USART3, "ld");
-            USART_puts(USART2, "ld");
-            vTaskDelay(1000);
+		if(ADC1ConvertedVoltage[0] > xthreshold2) //left
+		{
+            USART_puts(USART2, "l");
+            USART_puts(USART3, "l");
         }
-        if(ADC1ConvertedVoltage[1] < ythreshold1) //backward
+        if(ADC1ConvertedVoltage[1] > ythreshold1) //backward
         {
-            USART_puts(USART2, "bd");
-            //USART_puts(USART3, "bd");
-            vTaskDelay(1000);
+        	USART_puts(USART2, "b");
+            USART_puts(USART3, "b");
         }
         if(ADC1ConvertedVoltage[1] > ythreshold2) //forward
         {
-            USART_puts(USART2, "fd");
-            //USART_puts(USART3, "fd");
-            vTaskDelay(1000);
+        	USART_puts(USART2, "f");
+            USART_puts(USART3, "f");
         }
-        if(ADC1ConvertedVoltage[0]>xthreshold1 && ADC1ConvertedVoltage[0]<xthreshold2 && ADC1ConvertedVoltage[1]>ythreshold1 && ADC1ConvertedVoltage[1]<ythreshold2)
+        if(ADC1ConvertedVoltage[0]<xthreshold1 && ADC1ConvertedVoltage[0]<(xthreshold2) && ADC1ConvertedVoltage[1]<ythreshold1 && ADC1ConvertedVoltage[1]<ythreshold2)
         {
-            //USART_puts(USART3, "sd"); //stop
-            USART_puts(USART2, "sd");
-            vTaskDelay(1000);
+            USART_puts(USART2, "s");
+            USART_puts(USART3, "s");
         }
+*/
 
+		/*if(ADC1ConvertedVoltage[1] >= 3000 && ADC1ConvertedVoltage[1] - 2371 > ADC1ConvertedVoltage[0] - 2278 && ADC1ConvertedVoltage[1] - 2371 > 2278 - ADC1ConvertedVoltage[0]){ //forward(3000~4095)
+			USART_puts(USART2, "f");
+		    Joystick_x_Filter = 2305; //x stop
+		    Joystick_y_Filter = ADC1ConvertedVoltage[1];
+		    if(ADC1ConvertedVoltage[1] <= 3365){ //min_speed
+		    	USART_puts(USART2, "1");
+		    }
+		    else if(ADC1ConvertedVoltage[1] > 3365 && ADC1ConvertedVoltage[1] <= 3730){
+		    	USART_puts(USART2, "2");
+		    }
+		    else if(ADC1ConvertedVoltage[1] > 3730){
+		    	USART_puts(USART2, "3");
+		    }
+		    vTaskDelay(100);
+	    }
+
+	    else if(ADC1ConvertedVoltage[0] < 3000 && ADC1ConvertedVoltage[1] < 3000 && ADC1ConvertedVoltage[0] > 1500 && ADC1ConvertedVoltage[1] > 1500){  //stop
+	    	USART_puts(USART2, "s");
+		    USART_puts(USART2, "s");
+		    Joystick_x_Filter = ADC1ConvertedVoltage[0];
+		    Joystick_y_Filter = ADC1ConvertedVoltage[1];
+		    vTaskDelay(100);
+	    }
+	    else if(ADC1ConvertedVoltage[1] <= 1500 && 2371 - ADC1ConvertedVoltage[1] > 2235 - ADC1ConvertedVoltage[0] && 2371 - ADC1ConvertedVoltage[1] > ADC1ConvertedVoltage[0] - 2235){  //backward(1500~0)
+	        USART_puts(USART2, "b");
+		    Joystick_x_Filter = 2305;
+		    Joystick_y_Filter = ADC1ConvertedVoltage[1];
+		    if(ADC1ConvertedVoltage[1] > 1000){
+			    USART_puts(USART2, "1");
+		    }
+		    else if(ADC1ConvertedVoltage[1] > 500 && ADC1ConvertedVoltage[1] <= 1000){
+			    USART_puts(USART2, "2");
+		    }
+		    else if(ADC1ConvertedVoltage[1] <= 500){
+			    USART_puts(USART2, "3");
+		    }
+		    vTaskDelay(100);
+	    }
+        else if(ADC1ConvertedVoltage[0] >= 3000 && ADC1ConvertedVoltage[0] - 2278 > ADC1ConvertedVoltage[1] - 2335 && ADC1ConvertedVoltage[0] -2229 > 2335 - ADC1ConvertedVoltage[1]){  //left(3000~4095)
+    	    USART_puts(USART2, "l");
+            Joystick_x_Filter = ADC1ConvertedVoltage[0];
+            Joystick_y_Filter = 2362;
+		    if(ADC1ConvertedVoltage[0] <= 3365){ //min_speed
+			    USART_puts(USART2, "1");
+		    }
+		    else if(ADC1ConvertedVoltage[0] > 3365 && ADC1ConvertedVoltage[0] <= 3730){ //mid_speed
+			    USART_puts(USART2, "2");
+		    }
+		    else if(ADC1ConvertedVoltage[0] > 3730){ //max_speed
+			    USART_puts(USART2, "3");
+		    }
+		    vTaskDelay(100);
+	    }
+        else if(ADC1ConvertedVoltage[0] <= 1500 && 2278 - ADC1ConvertedVoltage[0] > 2408 - ADC1ConvertedVoltage[1] && 2278 - ADC1ConvertedVoltage[0] > ADC1ConvertedVoltage[1] - 2408){  //right(1500~0)
+    	    USART_puts(USART2, "r");
+            Joystick_x_Filter = ADC1ConvertedVoltage[0];
+            Joystick_y_Filter = 2362;
+		    if(ADC1ConvertedVoltage[0] > 1000){
+			    USART_puts(USART2, "1");
+		    }
+		    else if(ADC1ConvertedVoltage[0] > 500 && ADC1ConvertedVoltage[0] <= 1000){
+			    USART_puts(USART2, "2");
+		    }
+		    else if(ADC1ConvertedVoltage[0] <= 500){
+			    USART_puts(USART2, "3");
+		    }
+		    vTaskDelay(100);
+	    }
+	    else{
+	    }*/
     }
 }
 
@@ -279,35 +412,3 @@ void send_Joystick_MPU6050_data(){
         vTaskDelay(1000);
     }
 }
-
-int fuzzy_th(int error)
-        {
-            char n;
-            float rule[5]={50,25,0,-25,-50};
-            float num=0,den=0,crisp=0,grade1,grade2,slope;
-
-            if(error<=membership[0])
-            {
-                grade1=1; grade2=0; num=num+rule[0]; den=den+1;
-            }
-            else if(error>membership[4])
-            {
-                grade1=0; grade2=1; num=num+rule[4]; den=den+1;
-            }
-            else
-            {
-                for(n=0;n<4;n++)
-                {
-                    slope=-1/(membership[n+1]-membership[n]);
-                    if((error>membership[n])&&(error<=membership[n+1]))
-                    {
-                        grade1=slope*(error-membership[n+1]);
-                        grade2=slope*(membership[n]-error);
-                        num=num+grade1*rule[n]+grade2*rule[n+1];
-                        den=den+grade1+grade2;
-                    }
-                }
-            }
-            crisp=num/den;
-            return crisp;
-        }
