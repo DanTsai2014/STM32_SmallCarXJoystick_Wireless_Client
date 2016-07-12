@@ -48,7 +48,7 @@ void init_USART3(uint32_t baurate){
 	 */
 	GPIO_InitTypeDef GPIO_InitStruct; // this is for the GPIO pins used as TX and RX
 	USART_InitTypeDef USART_InitStruct; // this is for the USART3 initilization
-	NVIC_InitTypeDef NVIC_InitStructure; // this is used to configure the NVIC (nested vector interrupt controller)
+	//NVIC_InitTypeDef NVIC_InitStructure; // this is used to configure the NVIC (nested vector interrupt controller)
 
 	/* enable APB1 peripheral clock for USART3
 	 * note that only USART1 and USART6 are connected to APB2
@@ -97,13 +97,13 @@ void init_USART3(uint32_t baurate){
 	 * to jump to the USART3_IRQHandler() function
 	 * if the USART3 receive interrupt occurs
 	 */
-	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE); // enable the USART3 receive interrupt 
+	/*USART_ITConfig(USART3, USART_IT_RXNE, ENABLE); // enable the USART3 receive interrupt 
 
 	NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;                 // we want to configure the USART1 interrupts
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;// this sets the priority group of the USART1 interrupts
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                 // this sets the subpriority inside the group
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                         // the USART1 interrupts are globally enabled
-	NVIC_Init(&NVIC_InitStructure);                                                        // the properties are passed to the NVIC_Init function which takes care of the low level stuff        
+	NVIC_Init(&NVIC_InitStructure);*/                                                  // the properties are passed to the NVIC_Init function which takes care of the low level stuff        
 
 	// finally this enables the complete USART3 peripheral
 	USART_Cmd(USART3, ENABLE);
@@ -121,7 +121,7 @@ void init_USART2(uint32_t baurate){
 	 */
 	GPIO_InitTypeDef GPIO_InitStruct; // this is for the GPIO pins used as TX and RX
 	USART_InitTypeDef USART_InitStruct; // this is for the USART3 initilization
-	NVIC_InitTypeDef NVIC_InitStructure; // this is used to configure the NVIC (nested vector interrupt controller)
+	//NVIC_InitTypeDef NVIC_InitStructure; // this is used to configure the NVIC (nested vector interrupt controller)
 
 	/* enable APB1 peripheral clock for USART2
 	 * note that only USART1 and USART6 are connected to APB2
@@ -170,23 +170,23 @@ void init_USART2(uint32_t baurate){
 	 * to jump to the USART3_IRQHandler() function
 	 * if the USART3 receive interrupt occurs
 	 */
-	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE); // enable the USART3 receive interrupt 
+	/*USART_ITConfig(USART2, USART_IT_RXNE, ENABLE); // enable the USART3 receive interrupt 
 
 	NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;                 // we want to configure the USART1 interrupts
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;// this sets the priority group of the USART1 interrupts
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;                 // this sets the subpriority inside the group
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                         // the USART1 interrupts are globally enabled
-	NVIC_Init(&NVIC_InitStructure);                                                         // the properties are passed to the NVIC_Init function which takes care of the low level stuff        
+	NVIC_Init(&NVIC_InitStructure); */                                                     // the properties are passed to the NVIC_Init function which takes care of the low level stuff        
 
 	// finally this enables the complete USART2 peripheral
 	USART_Cmd(USART2, ENABLE);
 }
 
 // this is the interrupt request handler (IRQ) for ALL USART3 interrupts
-void USART3_IRQHandler(void){
+/*void USART3_IRQHandler(void){
 	// check if the USART3 receive interrupt flag was set
 	if( USART_GetITStatus(USART3, USART_IT_RXNE) ){
-		/*check the uart RX have accept the char*/
+		//check the uart RX have accept the char
 		GPIO_ToggleBits(GPIOD,GPIO_Pin_14);
 
 		static uint8_t cnt = 0; // this counter is used to determine the uart receive string length
@@ -197,7 +197,7 @@ void USART3_IRQHandler(void){
 		/* check if the received character is not the LF character (used to determine end of string) 
 		 * or the if the maximum string length has been been reached 
 		 */
-
+/*
 		if( cnt < MAX_STRLEN){ 
 			received_string[cnt] = Receive_data;
             if(Receive_data=='0') GPIO_ToggleBits(GPIOD,GPIO_Pin_15);
@@ -219,7 +219,7 @@ void USART3_IRQHandler(void){
 			USART_puts(USART3, received_string);
 			USART_puts(USART3,"\r\n");
 			//receive_task();
-			/*clear the received string and the flag*/
+			//clear the received string and the flag
 			Receive_String_Ready = 0;
 			int i;
 			for( i = 0 ; i< MAX_STRLEN ; i++){
@@ -227,7 +227,7 @@ void USART3_IRQHandler(void){
 			}
 		}
 	}
-}
+}*/
 
 void USART_puts(USART_TypeDef* USARTx, volatile uint8_t *s) //uint8_t = unsigned char
 {

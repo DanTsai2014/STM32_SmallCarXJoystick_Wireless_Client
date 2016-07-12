@@ -91,13 +91,13 @@ int main(void) {
   mpu6050_setZGyroOffset_2(13);
   */
   //PLX-DAQ
-  USART_puts(USART3, "CLEARDATA"); //clears up any data left from previous projects
-  USART_puts(USART3, "\r\n");
+  USART_puts(USART2, "CLEARDATA"); //clears up any data left from previous projects
+  USART_puts(USART2, "\r\n");
   //USART_puts(USART3, "LABEL,Time,JOY_x,JOY_y,JOY_xx,JOY_yy,ACC1_x,ACC1_y,ACC1_z,ACC2_x,ACC2_y,ACC2_z,ANG1_x,ANG1_y,ANG1_z,ANG2_x,ANG2_y,ANG2_z,ACC1_yy,ACC2_yy,ANG1_yy,ANG2_yy"); //always write LABEL, so excel knows the next things will be the names of the columns (instead of Acolumn you could write Time for instance)
-  USART_puts(USART3, "LABEL,Time,JOY_x,JOY_y");
-  USART_puts(USART3, "\r\n");
-  USART_puts(USART3, "RESETTIMER"); //resets timer to 0
-  USART_puts(USART3, "\r\n");
+  USART_puts(USART2, "LABEL,Time,JOY_x,JOY_y");
+  USART_puts(USART2, "\r\n");
+  USART_puts(USART2, "RESETTIMER"); //resets timer to 0
+  USART_puts(USART2, "\r\n");
 
   /*
   if( MPU6050_TestConnection() == TRUE)
@@ -109,7 +109,7 @@ int main(void) {
 
 	/*create the task. */         
   //printf("Task creating...........\r\n");
-  ret = xTaskCreate(parse_Joystick_dir, (signed portCHAR *) "parse Joystick direction", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
+  ret = xTaskCreate(parse_Joystick_dir, (signed portCHAR *) "parse Joystick direction", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
   ret = xTaskCreate(send_Joystick_MPU6050_data, (signed portCHAR *) "send Joystick and MPU6050 data", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 
 	//if (ret == pdTRUE) {
@@ -121,7 +121,7 @@ int main(void) {
 	// --TODO blink some LEDs to indicates fatal system error
 	//}
 
-	for (;;);
+	//for (;;);
 
   //return 0;
 }

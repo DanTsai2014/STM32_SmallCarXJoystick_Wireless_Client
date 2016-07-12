@@ -8,8 +8,8 @@
 
 char buff_JOY_x [] = "";
 char buff_JOY_y [] = "";
-char buff_JOY_xx [] = "";
-char buff_JOY_yy [] = "";
+//char buff_JOY_xx [] = "";
+//char buff_JOY_yy [] = "";
 char buff_acc_x_1 [] = "";
 char buff_acc_y_1 [] = "";
 char buff_acc_z_1 [] = "";
@@ -182,40 +182,41 @@ void parse_Joystick_dir(void *pvParameters)
             	ythreshold2=3400;
             }
         }
-        vTaskDelay(10); //necessary delay
+        //vTaskDelay(10); //necessary delay
 
         //movements
+        if(ADC1ConvertedVoltage[0]>xthreshold1 && ADC1ConvertedVoltage[0]<xthreshold2 && ADC1ConvertedVoltage[1]>ythreshold1 && ADC1ConvertedVoltage[1]<ythreshold2)
+        //if(ADC1ConvertedVoltage[0]>1500 && ADC1ConvertedVoltage[0]<3000 && ADC1ConvertedVoltage[1]>1500 && ADC1ConvertedVoltage[1]<3000)
+        {
+            USART_puts(USART3, "sd"); //stop
+            USART_puts(USART2, "sd");
+            vTaskDelay(1000);
+        }
         if(ADC1ConvertedVoltage[0] < xthreshold1) //right
         {
             USART_puts(USART2, "rd");
             USART_puts(USART3, "rd");
-            vTaskDelay(30);
+            vTaskDelay(1000);
         }
         if(ADC1ConvertedVoltage[0] > xthreshold2) //left
         {
             USART_puts(USART3, "ld");
             USART_puts(USART2, "ld");
-            vTaskDelay(30);
+            vTaskDelay(1000);
         }
         if(ADC1ConvertedVoltage[1] < ythreshold1) //backward
         {
             USART_puts(USART2, "bd");
             USART_puts(USART3, "bd");
-            vTaskDelay(30);
+            vTaskDelay(1000);
         }
         if(ADC1ConvertedVoltage[1] > ythreshold2) //forward
         {
             USART_puts(USART2, "fd");
             USART_puts(USART3, "fd");
-            vTaskDelay(30);
+            vTaskDelay(1000);
         }
-        if(ADC1ConvertedVoltage[0]>xthreshold1 && ADC1ConvertedVoltage[0]<xthreshold2 && ADC1ConvertedVoltage[1]>ythreshold1 && ADC1ConvertedVoltage[1]<ythreshold2)
-        {
-            USART_puts(USART3, "sd"); //stop
-            USART_puts(USART2, "sd");
-            vTaskDelay(30);
-        }
-
+        
     }
 }
 
