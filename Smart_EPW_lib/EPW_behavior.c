@@ -128,7 +128,7 @@ void parse_Joystick_dir(void *pvParameters)
         //right fuzzy
         if((ADC1ConvertedVoltage[0]-xthreshold1)>=-400 && (ADC1ConvertedVoltage[0]-xthreshold1)<=400)
         {
-            float membership[5]={-800,-400,0,400,800};
+            //float membership[5]={-800,-400,0,400,800};
         	xthreshold1=xthreshold1+fuzzy_th(ADC1ConvertedVoltage[0]-xthreshold1);
             if(xthreshold1<1000)
             {
@@ -143,7 +143,7 @@ void parse_Joystick_dir(void *pvParameters)
         //left fuzzy
         if((ADC1ConvertedVoltage[0]-xthreshold2)>=-400 && (ADC1ConvertedVoltage[0]-xthreshold2)<=400)
         {
-        	float membership[5]={-800,-400,0,400,800};
+        	//float membership[5]={-800,-400,0,400,800};
         	xthreshold2=xthreshold2+fuzzy_th(ADC1ConvertedVoltage[0]-xthreshold2);
             if(xthreshold2<2500)
             {
@@ -157,7 +157,7 @@ void parse_Joystick_dir(void *pvParameters)
         //backward fuzzy
         if((ADC1ConvertedVoltage[1]-ythreshold1)>=-400 && (ADC1ConvertedVoltage[1]-ythreshold1)<=400)
         {
-        	float membership[5]={-800,-400,0,400,800};
+        	//float membership[5]={-800,-400,0,400,800};
             ythreshold1=ythreshold1+fuzzy_th(ADC1ConvertedVoltage[1]-ythreshold1);
             if(ythreshold1<1000)
             {
@@ -171,7 +171,7 @@ void parse_Joystick_dir(void *pvParameters)
         //forward fuzzy
         if((ADC1ConvertedVoltage[1]-ythreshold2)>=-400 && (ADC1ConvertedVoltage[1]-ythreshold2)<=400)
         {
-        	float membership[5]={-800,-400,0,400,800};
+        	//float membership[5]={-800,-400,0,400,800};
         	ythreshold2=ythreshold2+fuzzy_th(ADC1ConvertedVoltage[1]-ythreshold2);
             if(ythreshold2<2500)
             {
@@ -182,38 +182,38 @@ void parse_Joystick_dir(void *pvParameters)
             	ythreshold2=3400;
             }
         }
-        vTaskDelay(10); //must delay
+        vTaskDelay(10); //necessary delay
 
         //movements
         if(ADC1ConvertedVoltage[0] < xthreshold1) //right
         {
             USART_puts(USART2, "rd");
-            //USART_puts(USART3, "rd");
-            vTaskDelay(1000);
+            USART_puts(USART3, "rd");
+            vTaskDelay(30);
         }
         if(ADC1ConvertedVoltage[0] > xthreshold2) //left
         {
-            //USART_puts(USART3, "ld");
+            USART_puts(USART3, "ld");
             USART_puts(USART2, "ld");
-            vTaskDelay(1000);
+            vTaskDelay(30);
         }
         if(ADC1ConvertedVoltage[1] < ythreshold1) //backward
         {
             USART_puts(USART2, "bd");
-            //USART_puts(USART3, "bd");
-            vTaskDelay(1000);
+            USART_puts(USART3, "bd");
+            vTaskDelay(30);
         }
         if(ADC1ConvertedVoltage[1] > ythreshold2) //forward
         {
             USART_puts(USART2, "fd");
-            //USART_puts(USART3, "fd");
-            vTaskDelay(1000);
+            USART_puts(USART3, "fd");
+            vTaskDelay(30);
         }
         if(ADC1ConvertedVoltage[0]>xthreshold1 && ADC1ConvertedVoltage[0]<xthreshold2 && ADC1ConvertedVoltage[1]>ythreshold1 && ADC1ConvertedVoltage[1]<ythreshold2)
         {
-            //USART_puts(USART3, "sd"); //stop
+            USART_puts(USART3, "sd"); //stop
             USART_puts(USART2, "sd");
-            vTaskDelay(1000);
+            vTaskDelay(30);
         }
 
     }
@@ -221,22 +221,22 @@ void parse_Joystick_dir(void *pvParameters)
 
 void send_Joystick_MPU6050_data(){
 	while(1){
-		USART_puts(USART3, "DATA,TIME,,");
+		USART_puts(USART2, "DATA,TIME,,");
 
 		sprintf(buff_JOY_x, "%d,", ADC1ConvertedVoltage[0]);
-		Usart3_Printf(buff_JOY_x);
+		Usart2_Printf(buff_JOY_x);
 		sprintf(buff_JOY_y, "%d\r\n", ADC1ConvertedVoltage[1]);
-		Usart3_Printf(buff_JOY_y);
+		Usart2_Printf(buff_JOY_y);
 
         //dynamic threshold (fuzzy)
 		sprintf(xthreshold1_buffer, "x1=%d\r\n", xthreshold1);
-		Usart3_Printf(xthreshold1_buffer);
+		Usart2_Printf(xthreshold1_buffer);
 		sprintf(xthreshold2_buffer, "x2=%d\r\n", xthreshold2);
-		Usart3_Printf(xthreshold2_buffer);
+		Usart2_Printf(xthreshold2_buffer);
 		sprintf(ythreshold1_buffer, "y1=%d\r\n", ythreshold1);
-		Usart3_Printf(ythreshold1_buffer);
+		Usart2_Printf(ythreshold1_buffer);
 		sprintf(ythreshold2_buffer, "y2=%d\r\n", ythreshold2);
-		Usart3_Printf(ythreshold2_buffer);
+		Usart2_Printf(ythreshold2_buffer);
 
         //USART_puts(USART3, dir);
 /*
@@ -283,9 +283,10 @@ void send_Joystick_MPU6050_data(){
 int fuzzy_th(int error)
         {
             char n;
+            float membership[5]={-800,-400,0,400,800};
             float rule[5]={50,25,0,-25,-50};
             float num=0,den=0,crisp=0,grade1,grade2,slope;
-
+            
             if(error<=membership[0])
             {
                 grade1=1; grade2=0; num=num+rule[0]; den=den+1;

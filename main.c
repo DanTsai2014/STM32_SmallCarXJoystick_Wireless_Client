@@ -46,12 +46,12 @@ void vApplicationStackOverflowHook(xTaskHandle pxTask, signed char *pcTaskName) 
         for(;;);
 }
 
-void Usart3_Printf(char *string){
+void Usart2_Printf(char *string){
     while(*string){
         // send string to USART3 
-        USART_SendData(USART3, (unsigned short int) *string++);
+        USART_SendData(USART2, (unsigned short int) *string++);
         // wait for sending string finished 
-        while (USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET);
+        while (USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
     }
 }
 
