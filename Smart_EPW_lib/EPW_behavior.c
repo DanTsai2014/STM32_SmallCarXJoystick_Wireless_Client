@@ -182,15 +182,19 @@ void parse_Joystick_dir(void *pvParameters)
             	ythreshold2=3400;
             }
         }
-        //vTaskDelay(10); //necessary delay
+        vTaskDelay(10);       
+    }
+}
 
-        //movements
+void send_Joystick_dir(){
+    //movements
+    while(1){
         if(ADC1ConvertedVoltage[0]>xthreshold1 && ADC1ConvertedVoltage[0]<xthreshold2 && ADC1ConvertedVoltage[1]>ythreshold1 && ADC1ConvertedVoltage[1]<ythreshold2)
         //if(ADC1ConvertedVoltage[0]>1500 && ADC1ConvertedVoltage[0]<3000 && ADC1ConvertedVoltage[1]>1500 && ADC1ConvertedVoltage[1]<3000)
         {
             USART_puts(USART3, "sd"); //stop
             USART_puts(USART2, "sd");
-            vTaskDelay(1000);
+            vTaskDelay(10);
         }
         if(ADC1ConvertedVoltage[0] < xthreshold1) //right
         {
@@ -216,7 +220,7 @@ void parse_Joystick_dir(void *pvParameters)
             USART_puts(USART3, "fd");
             vTaskDelay(1000);
         }
-        
+        //vTaskDelay(1000);
     }
 }
 

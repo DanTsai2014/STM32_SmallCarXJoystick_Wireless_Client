@@ -27,4 +27,5 @@ int fuzzy_th(int error);
 
 extern void parse_Joystick_dir();
 extern void send_Joystick_MPU6050_data();
+extern void send_Joystick_dir();
 #endif /* __CAR_BEHAVIOR_H__ */

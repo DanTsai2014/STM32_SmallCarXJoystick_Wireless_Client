@@ -109,8 +109,9 @@ int main(void) {
 
 	/*create the task. */         
   //printf("Task creating...........\r\n");
-  ret = xTaskCreate(parse_Joystick_dir, (signed portCHAR *) "parse Joystick direction", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-  ret = xTaskCreate(send_Joystick_MPU6050_data, (signed portCHAR *) "send Joystick and MPU6050 data", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+  ret = xTaskCreate(parse_Joystick_dir, (signed portCHAR *) "parse Joystick direction", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
+  ret = xTaskCreate(send_Joystick_dir, (signed portCHAR *) "send Joystick direction", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+  ret = xTaskCreate(send_Joystick_MPU6050_data, (signed portCHAR *) "send Joystick and MPU6050 data", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
 
 	//if (ret == pdTRUE) {
 	//printf("All tasks are created.\r\n");
