@@ -78,23 +78,24 @@ int main(void) {
   init_USART2(9600);
   init_ADC1();
   ADC_SoftwareStartConv(ADC1);
- /*      
+       
   MPU6050_I2C_Init();
   MPU6050_Initialize_1();
-  MPU6050_Initialize_2();
-  
-  mpu6050_setXAccelOffset_2(-1367);
-  mpu6050_setYAccelOffset_2(-213);
-  mpu6050_setZAccelOffset_2(947);
-  mpu6050_setXGyroOffset_2(100);
-  mpu6050_setYGyroOffset_2(29);
-  mpu6050_setZGyroOffset_2(13);
+  //MPU6050_Initialize_2();
+  /*
+  mpu6050_setXAccelOffset_1(1284);
+  mpu6050_setYAccelOffset_1(73);
+  mpu6050_setZAccelOffset_1(1632);
+  mpu6050_setXGyroOffset_1(62);
+  mpu6050_setYGyroOffset_1(3);
+  mpu6050_setZGyroOffset_1(300);
   */
   //PLX-DAQ
   USART_puts(USART2, "CLEARDATA"); //clears up any data left from previous projects
   USART_puts(USART2, "\r\n");
-  //USART_puts(USART3, "LABEL,Time,JOY_x,JOY_y,JOY_xx,JOY_yy,ACC1_x,ACC1_y,ACC1_z,ACC2_x,ACC2_y,ACC2_z,ANG1_x,ANG1_y,ANG1_z,ANG2_x,ANG2_y,ANG2_z,ACC1_yy,ACC2_yy,ANG1_yy,ANG2_yy"); //always write LABEL, so excel knows the next things will be the names of the columns (instead of Acolumn you could write Time for instance)
-  USART_puts(USART2, "LABEL,Time,JOY_x,JOY_y");
+  //USART_puts(USART2, "LABEL,Time,JOY_x,JOY_y,ACC1_x,ACC1_y,ACC1_z,ACC2_x,ACC2_y,ACC2_z,ANG1_x,ANG1_y,ANG1_z,ANG2_x,ANG2_y,ANG2_z,ACC1_yy,ACC2_yy,ANG1_yy,ANG2_yy"); //always write LABEL, so excel knows the next things will be the names of the columns (instead of Acolumn you could write Time for instance)
+  USART_puts(USART2, "LABEL,Time,JOY_x,JOY_y,ACC_x,ACC_y,ACC_z,ANG_x,ANG_y,ANG_z");
+  //USART_puts(USART2, "LABEL,Time,JOY_x,JOY_y");
   USART_puts(USART2, "\r\n");
   USART_puts(USART2, "RESETTIMER"); //resets timer to 0
   USART_puts(USART2, "\r\n");
