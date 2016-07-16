@@ -6,6 +6,7 @@
 #include "stm32f4xx_dma.h"
 #include "EPW_behavior.h"
 #include "uart.h"
+#include "math.h"
 
 void vApplicationTickHook(void) {
 }
