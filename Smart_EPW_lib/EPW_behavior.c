@@ -192,33 +192,33 @@ void send_Joystick_dir(){
         if(ADC1ConvertedVoltage[0]>xthreshold1 && ADC1ConvertedVoltage[0]<xthreshold2 && ADC1ConvertedVoltage[1]>ythreshold1 && ADC1ConvertedVoltage[1]<ythreshold2)
         //if(ADC1ConvertedVoltage[0]>1500 && ADC1ConvertedVoltage[0]<3000 && ADC1ConvertedVoltage[1]>1500 && ADC1ConvertedVoltage[1]<3000)
         {
-            USART_puts(USART3, "sd"); //stop
+            USART_puts(USART3, "s"); //stop
             //USART_puts(USART2, "sd");
-            vTaskDelay(10);
+            //vTaskDelay(10);
         }
         if(ADC1ConvertedVoltage[0] < xthreshold1) //right
         {
-            USART_puts(USART3, "rd");
+            USART_puts(USART3, "r");
             //USART_puts(USART2, "rd");
-            vTaskDelay(1000);
+            //vTaskDelay(10);
         }
         if(ADC1ConvertedVoltage[0] > xthreshold2) //left
         {
-            USART_puts(USART3, "ld");
+            USART_puts(USART3, "l");
             //USART_puts(USART2, "ld");
-            vTaskDelay(1000);
+            //vTaskDelay(10);
         }
         if(ADC1ConvertedVoltage[1] < ythreshold1) //backward
         {
-            USART_puts(USART3, "bd");
+            USART_puts(USART3, "b");
             //USART_puts(USART2, "bd");
-            vTaskDelay(1000);
+            //vTaskDelay(10);
         }
         if(ADC1ConvertedVoltage[1] > ythreshold2) //forward
         {
-            USART_puts(USART3, "fd");
+            USART_puts(USART3, "f");
             //USART_puts(USART2, "fd");
-            vTaskDelay(1000);
+            //vTaskDelay(10);
         }
         //vTaskDelay(1000);
     }
@@ -253,11 +253,14 @@ void send_Joystick_MPU6050_data(){
 		MPU6050_GetRawAccelGyro_1(accgyo_1);
 		//MPU6050_GetRawAccelGyro_2(accgyo_2);
 
-        sprintf(buff_acc_x_1, "%d,", accgyo_1[0]+1618);
+        //sprintf(buff_acc_x_1, "%d,", accgyo_1[0]);
+        sprintf(buff_acc_x_1, "%d,", map(accgyo_1[0]+1478, -32768, 32767, 0, 4095));
         Usart2_Printf(buff_acc_x_1);
-        sprintf(buff_acc_y_1, "%d,", accgyo_1[1]+348);
+        //sprintf(buff_acc_y_1, "%d,", accgyo_1[1]);
+        sprintf(buff_acc_y_1, "%d,", map(accgyo_1[1]+348, -32768, 32767, 0, 4095));
         Usart2_Printf(buff_acc_y_1);
-        sprintf(buff_acc_z_1, "%d,", accgyo_1[2]+2989);
+        //sprintf(buff_acc_z_1, "%d,", accgyo_1[2]);
+        sprintf(buff_acc_z_1, "%d,", map(accgyo_1[2]+3363, -32768, 32767, 0, 4095));
         Usart2_Printf(buff_acc_z_1);
 /*
         sprintf(buff_acc_x_2, "%d,", accgyo_2[0]);
@@ -267,11 +270,14 @@ void send_Joystick_MPU6050_data(){
         sprintf(buff_acc_z_2, "%d,", accgyo_2[2]);
         Usart2_Printf(buff_acc_z_2);
 */
-        sprintf(buff_ang_x_1, "%d,", accgyo_1[3]+237);
+        //sprintf(buff_ang_x_1, "%d,", accgyo_1[3]);
+        sprintf(buff_ang_x_1, "%d,", map(accgyo_1[3]+518, -32768, 32767, 0, 4095));
         Usart2_Printf(buff_ang_x_1);
-        sprintf(buff_ang_y_1, "%d,", accgyo_1[4]+265);
+        //sprintf(buff_ang_y_1, "%d,", accgyo_1[4]);
+        sprintf(buff_ang_y_1, "%d,", map(accgyo_1[4]+9, -32768, 32767, 0, 4095));
         Usart2_Printf(buff_ang_y_1);
-        sprintf(buff_ang_z_1, "%d\r\n", accgyo_1[5]+610);
+        //sprintf(buff_ang_z_1, "%d\r\n", accgyo_1[5]);
+        sprintf(buff_ang_z_1, "%d\r\n", map(accgyo_1[5]+238, -32768, 32767, 0, 4095));
         Usart2_Printf(buff_ang_z_1);
 /*
         sprintf(buff_ang_x_2, "%d,", accgyo_2[3]);
@@ -281,7 +287,7 @@ void send_Joystick_MPU6050_data(){
         sprintf(buff_ang_z_2, "%d\r\n", accgyo_2[5]);
         Usart2_Printf(buff_ang_z_2);
 */
-        vTaskDelay(1000);
+        vTaskDelay(200);
     }
 }
 
@@ -317,3 +323,8 @@ int fuzzy_th(int error)
             crisp=num/den;
             return crisp;
         }
+
+long map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
